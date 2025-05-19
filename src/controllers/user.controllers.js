@@ -155,11 +155,26 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  await User.findByIdAndUpdate(req.user._id, { 
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    { new: true }
+  );
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
 
-     
-})})
-
+  return res
+    .status(200)
+    .clearcookie("accessToken", "", options)
+    .clearcookie("refreshToken", "", options)
+    .json(new ApiResponse(200, {}, "User has been logged out"));
+});
 
 const refreshAcessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
@@ -206,4 +221,4 @@ const refreshAcessToken = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Internal Server Error  while refreshing token");
   }
 });
-export { registerUser, loginUser , refreshAcessToken };
+export { registerUser, loginUser, refreshAcessToken, logoutUser };
